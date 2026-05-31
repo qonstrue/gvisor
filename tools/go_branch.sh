@@ -16,6 +16,14 @@
 
 set -xeou pipefail
 
+# GitHub Actions exports committer email with an empty name. Git honors those
+# environment variables over local config, which breaks merge/commit below.
+unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL
+export GIT_AUTHOR_NAME='gVisor bot'
+export GIT_AUTHOR_EMAIL='gvisor-bot@google.com'
+export GIT_COMMITTER_NAME="${GIT_AUTHOR_NAME}"
+export GIT_COMMITTER_EMAIL="${GIT_AUTHOR_EMAIL}"
+
 # Remember our current directory.
 declare orig_dir
 orig_dir=$(pwd)
@@ -79,8 +87,8 @@ git clone . "${repo_new}"
 cd "${repo_new}"
 
 # Setup the repository and checkout the branch.
-git config user.email "gvisor-bot@google.com"
-git config user.name "gVisor bot"
+git config user.email "${GIT_AUTHOR_EMAIL}"
+git config user.name "${GIT_AUTHOR_NAME}"
 if git show-ref --verify --quiet refs/remotes/origin/go; then
   git fetch origin go
   git checkout -B go origin/go

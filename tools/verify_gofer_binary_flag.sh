@@ -25,8 +25,9 @@ if [[ ! -x "${runsc}" ]]; then
   exit 1
 fi
 
-if ! "${runsc}" flags 2>&1 | grep -Fq 'gofer-binary'; then
-  echo "FAIL: ${runsc} flags does not document --gofer-binary" >&2
+# The flag name and help string are linked into the binary when registered.
+if ! strings "${runsc}" | grep -Fq 'gofer-binary'; then
+  echo "FAIL: ${runsc} was built without --gofer-binary support" >&2
   exit 1
 fi
 
@@ -34,6 +35,10 @@ fi
 # Top-level runsc flags must appear before the subcommand name.
 if err="$("${runsc}" --gofer-binary=relative/shim create --bundle /tmp test 2>&1)"; then
   echo "FAIL: expected create to reject relative --gofer-binary" >&2
+  exit 1
+fi
+if grep -Fq 'not defined' <<<"${err}" && grep -Fq 'gofer-binary' <<<"${err}"; then
+  echo "FAIL: ${runsc} was built without --gofer-binary support" >&2
   exit 1
 fi
 if ! grep -Fq 'gofer-binary must be an absolute path' <<<"${err}"; then
@@ -45,6 +50,10 @@ fi
 # Missing binary path must fail validation.
 if err="$("${runsc}" --gofer-binary=/no/such/cortex-gofer-shim create --bundle /tmp test 2>&1)"; then
   echo "FAIL: expected create to reject missing --gofer-binary path" >&2
+  exit 1
+fi
+if grep -Fq 'not defined' <<<"${err}" && grep -Fq 'gofer-binary' <<<"${err}"; then
+  echo "FAIL: ${runsc} was built without --gofer-binary support" >&2
   exit 1
 fi
 if ! grep -Fq 'gofer-binary "/no/such/cortex-gofer-shim"' <<<"${err}"; then

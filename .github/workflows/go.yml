@@ -20,6 +20,7 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       statuses: write
     steps:
     - id: setup
@@ -50,10 +51,11 @@ jobs:
         go-version-file: 'go.mod'
     - run: tools/go_branch.sh
     - run: git checkout go && git clean -xf . && go build ./...
-    - if: github.event_name == 'push'
-      run: |
-        git remote add upstream "https://github.com/${{ github.repository }}"
-        git push upstream go:go
+    # Pushing the synthetic go branch requires a PAT (GO_TOKEN). The default
+    # GITHUB_TOKEN is not used here; forks without GO_TOKEN still run the
+    # generator and go build, but skip publishing go:go.
+    - if: github.event_name == 'push' && steps.setup.outputs.has_token == 'true'
+      run: git push origin go:go
     - if: ${{ success() && github.event_name == 'pull_request' }}
       run: |
         jq -nc '{"state": "success", "context": "go tests"}' | \

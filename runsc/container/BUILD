@@ -31,6 +31,7 @@ go_library(
         "//pkg/unet",
         "//pkg/urpc",
         "//runsc/boot",
+        "//runsc/cmd/sandboxsetup",
         "//runsc/cgroup",
         "//runsc/config",
         "//runsc/console",

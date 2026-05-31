@@ -53,13 +53,20 @@ unzip bazel-bin/gopath.zip -d "${go_output}"
 # We expect to have an existing go branch that we will use as the basis for this
 # commit. That branch may be empty, but it must exist. We search for this branch
 # using the local branch, the "origin" branch, and other remotes, in order.
+# Forks that have never run this workflow may have no go branch yet; bootstrap
+# one with an empty tree commit so the merge below can proceed.
 git fetch --all
 declare go_branch
-go_branch=$( \
-  git show-ref --hash refs/heads/go || \
-  git show-ref --hash refs/remotes/origin/go || \
-  git show-ref --hash go | head -n 1 \
-)
+if git show-ref --verify --quiet refs/heads/go; then
+  go_branch=$(git rev-parse refs/heads/go)
+elif git show-ref --verify --quiet refs/remotes/origin/go; then
+  go_branch=$(git rev-parse refs/remotes/origin/go)
+else
+  echo "Bootstrapping missing go branch with empty root commit." >&2
+  readonly empty_tree=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+  go_branch=$(git commit-tree -m "Initial synthetic go branch" "${empty_tree}")
+  git branch go "${go_branch}"
+fi
 readonly go_branch
 
 # Clone the current repository to the temporary directory, and check out the
@@ -74,8 +81,12 @@ cd "${repo_new}"
 # Setup the repository and checkout the branch.
 git config user.email "gvisor-bot@google.com"
 git config user.name "gVisor bot"
-git fetch origin "${go_branch}"
-git checkout -b go "${go_branch}"
+if git show-ref --verify --quiet refs/remotes/origin/go; then
+  git fetch origin go
+  git checkout -B go origin/go
+else
+  git checkout -B go "${go_branch}"
+fi
 
 # Start working on a merge commit that combines the previous history with the
 # current history. Note that we don't actually want any changes yet.

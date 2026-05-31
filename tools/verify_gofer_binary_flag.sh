@@ -25,13 +25,14 @@ if [[ ! -x "${runsc}" ]]; then
   exit 1
 fi
 
-if ! "${runsc}" --help 2>&1 | grep -Fq 'gofer-binary'; then
-  echo "FAIL: ${runsc} --help does not document --gofer-binary" >&2
+if ! "${runsc}" flags 2>&1 | grep -Fq 'gofer-binary'; then
+  echo "FAIL: ${runsc} flags does not document --gofer-binary" >&2
   exit 1
 fi
 
 # Config validation must reject a relative path before sandbox create proceeds.
-if err="$("${runsc}" create --gofer-binary=relative/shim --bundle /tmp 2>&1)"; then
+# Top-level runsc flags must appear before the subcommand name.
+if err="$("${runsc}" --gofer-binary=relative/shim create --bundle /tmp test 2>&1)"; then
   echo "FAIL: expected create to reject relative --gofer-binary" >&2
   exit 1
 fi
@@ -42,7 +43,7 @@ if ! grep -Fq 'gofer-binary must be an absolute path' <<<"${err}"; then
 fi
 
 # Missing binary path must fail validation.
-if err="$("${runsc}" create --gofer-binary=/no/such/cortex-gofer-shim --bundle /tmp 2>&1)"; then
+if err="$("${runsc}" --gofer-binary=/no/such/cortex-gofer-shim create --bundle /tmp test 2>&1)"; then
   echo "FAIL: expected create to reject missing --gofer-binary path" >&2
   exit 1
 fi

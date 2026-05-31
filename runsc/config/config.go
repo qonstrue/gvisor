@@ -19,6 +19,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -333,6 +334,12 @@ type Config struct {
 	// exists, but is mostly idle. Not supported in rootless mode.
 	DirectFS bool `flag:"directfs"`
 
+	// GoferBinary, if non-empty, is the absolute path to an executable that
+	// replaces the internal `runsc gofer` subcommand. The process receives the
+	// first LISAFS socket on file descriptor 3. Intended for external
+	// filesystem proxies (e.g. cortex-gofer-shim).
+	GoferBinary string `flag:"gofer-binary"`
+
 	// AppHugePages enables support for application huge pages.
 	AppHugePages bool `flag:"app-huge-pages"`
 
@@ -495,6 +502,18 @@ func (c *Config) validate() error {
 	}
 	if unsupported := allowedCaps & ^nvconf.SupportedDriverCaps; unsupported != 0 {
 		return fmt.Errorf("--nvproxy-allowed-driver-capabilities=%q: unsupported capabilities: %v", c.NVProxyAllowedDriverCapabilities, unsupported)
+	}
+	if c.GoferBinary != "" {
+		if !filepath.IsAbs(c.GoferBinary) {
+			return fmt.Errorf("gofer-binary must be an absolute path, got %q", c.GoferBinary)
+		}
+		info, err := os.Stat(c.GoferBinary)
+		if err != nil {
+			return fmt.Errorf("gofer-binary %q: %w", c.GoferBinary, err)
+		}
+		if info.IsDir() {
+			return fmt.Errorf("gofer-binary %q is a directory", c.GoferBinary)
+		}
 	}
 	return nil
 }

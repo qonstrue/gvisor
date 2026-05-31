@@ -49,4 +49,5 @@ bzl_library(
 exports_files([
     "build_cover.sh",
     "go-allow-internal.patch",
+    "verify_gofer_binary_flag.sh",
 ])

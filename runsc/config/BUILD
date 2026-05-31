@@ -30,6 +30,7 @@ go_test(
     name = "config_test",
     size = "small",
     srcs = [
+        "config_gofer_binary_test.go",
         "config_test.go",
     ],
     library = ":config",

@@ -1392,6 +1392,10 @@ func (c *Container) createGoferProcess(conf *config.Config, mountHints *boot.Pod
 		return []*os.File{ioFile}, nil, nil, nil, nil
 	}
 
+	if conf.GoferBinary != "" {
+		return c.createExternalGoferProcess(conf, mountHints, attached)
+	}
+
 	// Ensure we don't leak FDs to the gofer process.
 	if err := sandbox.SetCloExeOnAllFDs(); err != nil {
 		return nil, nil, nil, nil, fmt.Errorf("setting CLOEXEC on all FDs: %w", err)

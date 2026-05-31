@@ -69,6 +69,18 @@ copy: ## Copies the given $(TARGETS) to the given $(DESTINATION). E.g. make copy
 	@$(call copy,$(TARGETS),$(DESTINATION))
 .PHONY: copy
 
+cortex-gofer-test: ## Unit/smoke tests for --gofer-binary (cortex-gofer-shim integration).
+	@$(call test,-- //runsc:cortex_gofer_binary)
+.PHONY: cortex-gofer-test
+
+cortex-gofer: ## Build runsc, verify --gofer-binary, and run cortex_gofer_binary tests (CI).
+	@mkdir -p bin
+	@$(call build,-- //runsc)
+	@$(call copy,runsc,bin/)
+	@bash tools/verify_gofer_binary_flag.sh bin/runsc
+	@$(call test,-- //runsc:cortex_gofer_binary)
+.PHONY: cortex-gofer
+
 run: ## Runs the given $(TARGETS), built with $(OPTIONS), using $(ARGS). E.g. make run TARGETS=runsc ARGS=-version
 	@$(call run,$(TARGETS),$(ARGS))
 .PHONY: run

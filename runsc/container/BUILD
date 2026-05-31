@@ -9,6 +9,7 @@ go_library(
     name = "container",
     srcs = [
         "container.go",
+        "external_gofer.go",
         "gofer_to_host_rpc.go",
         "state_file.go",
         "status.go",
@@ -42,6 +43,16 @@ go_library(
         "@com_github_gofrs_flock//:go_default_library",
         "@com_github_opencontainers_runtime_spec//specs-go:go_default_library",
         "@org_golang_x_sys//unix:go_default_library",
+    ],
+)
+
+go_test(
+    name = "external_gofer_test",
+    size = "small",
+    srcs = ["external_gofer_test.go"],
+    library = ":container",
+    deps = [
+        "//runsc/specutils",
     ],
 )
 

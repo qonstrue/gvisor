@@ -76,6 +76,24 @@ sh_test(
     data = [":runsc"],
 )
 
+# Unit + smoke tests for --gofer-binary (external gofer, e.g. cortex-gofer-shim).
+test_suite(
+    name = "cortex_gofer_binary",
+    tests = [
+        ":gofer_binary_flag_test",
+        "//runsc/config:config_test",
+        "//runsc/container:external_gofer_test",
+    ],
+)
+
+sh_test(
+    name = "gofer_binary_flag_test",
+    size = "small",
+    srcs = ["//tools:verify_gofer_binary_flag.sh"],
+    args = ["$(location :runsc)"],
+    data = [":runsc"],
+)
+
 go_cov(
     name = "runsc_coverage",
     srcs = [

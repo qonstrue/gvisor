@@ -145,6 +145,7 @@ func RegisterFlags(flagSet *flag.FlagSet) {
 	flagSet.Int("dcache", -1, "Set the global dentry cache size. This acts as a coarse-grained control on the number of host FDs simultaneously open by the sentry. If negative, per-mount caches are used.")
 	flagSet.Bool("iouring", false, "TEST ONLY; Enables io_uring syscalls in the sentry. Support is experimental and very limited.")
 	flagSet.Bool("directfs", true, "directly access the container filesystems from the sentry. Sentry runs with higher privileges.")
+	flagSet.String("gofer-binary", "", "optional absolute path to an external gofer executable. When set, runsc execs this program instead of `runsc gofer`. The program must serve LISAFS on file descriptor 3. Only a single LISAFS-backed root mount is supported. Incompatible with GPU/TPU device gofers.")
 	flagSet.Bool("TESTONLY-nftables", false, "TEST ONLY; Enables nftables support in the sentry.")
 
 	// Flags that control sandbox runtime behavior: network related.

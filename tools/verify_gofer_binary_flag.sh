@@ -25,9 +25,14 @@ if [[ ! -x "${runsc}" ]]; then
   exit 1
 fi
 
-# The flag name and help string are linked into the binary when registered.
-if ! strings "${runsc}" | grep -Fq 'gofer-binary'; then
+# Verify runsc advertises the flag in its help output. `runsc --help` returns
+# non-zero (the binary prints usage and exits 2), so capture stdout+stderr
+# without `set -e` killing us. Avoid `strings` because the bazel sh_test
+# sandbox does not include binutils.
+help_output="$(${runsc} --help 2>&1 || true)"
+if ! grep -Fq 'gofer-binary' <<<"${help_output}"; then
   echo "FAIL: ${runsc} was built without --gofer-binary support" >&2
+  echo "${help_output}" >&2
   exit 1
 fi
 

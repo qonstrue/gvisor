@@ -25,14 +25,13 @@ if [[ ! -x "${runsc}" ]]; then
   exit 1
 fi
 
-# Verify runsc advertises the flag in its help output. `runsc --help` returns
-# non-zero (the binary prints usage and exits 2), so capture stdout+stderr
-# without `set -e` killing us. Avoid `strings` because the bazel sh_test
-# sandbox does not include binutils.
-help_output="$(${runsc} --help 2>&1 || true)"
-if ! grep -Fq 'gofer-binary' <<<"${help_output}"; then
-  echo "FAIL: ${runsc} was built without --gofer-binary support" >&2
-  echo "${help_output}" >&2
+# Top-level flags are listed by `runsc flags`, not `runsc --help` (which only
+# lists subcommands). Avoid `strings` because the bazel sh_test sandbox does
+# not include binutils.
+flags_output="$("${runsc}" flags 2>&1 || true)"
+if ! grep -Fq 'gofer-binary' <<<"${flags_output}"; then
+  echo "FAIL: ${runsc} flags does not document --gofer-binary" >&2
+  echo "${flags_output}" >&2
   exit 1
 fi
 

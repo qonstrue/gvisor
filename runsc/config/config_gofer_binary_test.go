@@ -18,7 +18,25 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"gvisor.dev/gvisor/runsc/flag"
 )
+
+// newDefaultConfig builds a Config with the same defaults applied by the runsc
+// flag parser. Tests that mutate a single field still need the rest of the
+// struct populated so `validate()` can reach the field under test (e.g.
+// `NumNetworkChannels` defaults to 1; an uninitialized struct trips the
+// "must be > 0" check before any GoferBinary validation runs).
+func newDefaultConfig(t *testing.T) *Config {
+	t.Helper()
+	testFlags := flag.NewFlagSet("test", flag.ContinueOnError)
+	RegisterFlags(testFlags)
+	c, err := NewFromFlags(testFlags)
+	if err != nil {
+		t.Fatalf("NewFromFlags: %v", err)
+	}
+	return c
+}
 
 func TestValidateGoferBinary(t *testing.T) {
 	dir := t.TempDir()
@@ -37,7 +55,8 @@ func TestValidateGoferBinary(t *testing.T) {
 		{"missing", filepath.Join(dir, "nope"), true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := &Config{GoferBinary: tc.path}
+			c := newDefaultConfig(t)
+			c.GoferBinary = tc.path
 			err := c.validate()
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("validate() = %v, wantErr %v", err, tc.wantErr)
